@@ -15,45 +15,66 @@
 //===========================================================================
 
 #include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
+/* #include <string.h> */
+/* #include <stdio.h> */
+#include "../printf/printf.h"
+/* #include <stdlib.h> */
 #include "oled96.h"
+#include <unistd.h>
+#include "../mmio.h"
 
-int main(int argc, char *argv[])
-{
-int i, iChannel;
-int iOLEDAddr = 0x3c; // typical address; it can also be 0x3d
-int iOLEDType = OLED_128x32; // Change this for your specific display
-int bFlip = 1, bInvert = 1;
+const uint32_t CLK_FREQ = 12e6;
 
-	i = -1;
-	iChannel = -1;
-	while (i != 0 && iChannel < 2) // try I2C channel 0 through 2
-	{
-		iChannel++;
-		i=oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
-	}
-	if (i == 0)
-	{
-		printf("Successfully opened I2C bus %d\n", iChannel);
-		oledFill(0); // fill with black
-		oledWriteString(0,0,"OLED 96 Library!",FONT_NORMAL);
-		oledWriteString(3,1,"BIG!",FONT_BIG);
-		oledWriteString(0,1,"Small", FONT_SMALL);
-		for (i=0; i<64; i++)
-		{
-			oledSetPixel(i, 16+i, 1);
-			oledSetPixel(127-i, 16+i, 1);
-		}
-		printf("Press ENTER to quit\n");
-		getchar();
-		oledShutdown();
-	}
-	else
-	{
-		printf("Unable to initialize I2C bus 0-2, please check your connections and verify the device address by typing 'i2cdetect -y <channel>\n");
-	}
-   return 0;
+int main(int argc, char *argv[]) {
+  int i, iChannel;
+  int iOLEDAddr = 0x3c;        // typical address; it can also be 0x3d
+  int iOLEDType = OLED_128x64; // Change this for your specific display
+  int bFlip = 0, bInvert = 0;
+  scl_ratio_set(scl_compute_ratio(CLK_FREQ, 100e3));
+
+  /* const uint8_t oled64_initbuf[] = { */
+  /*     0x00, 0xae, 0xa8, 0x3f, 0xd3, 0x00, 0x40, 0xa1, 0xc8, 0xda, 0x12, */
+  /*     0x81, 0xff, 0xa4, 0xa6, 0xd5, 0x80, 0x8d, 0x14, 0xaf, 0x20, 0x02}; */
+
+  /* const uint8_t* arr = oled64_initbuf; */
+  /* uint8_t hmm = 0xAE; */
+  /* printf("Hmm: %02X\r\n", hmm); */
+  /* printf("Hmm2: %02X\r\n", arr[1] & 0x00FF); */
+
+  /* while(1){} */
+  i = -1;
+  iChannel = -1;
+  i = oledInit(iChannel, iOLEDAddr, iOLEDType, bFlip, bInvert);
+
+  printf("Successfully opened I2C bus %d\r\n", iChannel);
+  oledFill(0); // fill with black
+
+  /* printf("Trying to write string 1\r\n"); */
+  /* oledWriteString(0, 0, "OLED 123 Library!", FONT_NORMAL); */
+  /* printf("Trying to write string 2\r\n"); */
+  /* oledWriteString(3, 1, "BIG!", FONT_BIG); */
+  /* printf("Trying to write string 3\r\n"); */
+  /* oledWriteString(0, 1, "Small", FONT_SMALL); */
+  for (i = 0; i < 64; i++) {
+    oledSetPixel(i, 16 + i, 1);
+    oledSetPixel(127 - i, 16 + i, 1);
+  }
+  printf("Press ENTER to quit\n");
+  oledWriteString(0, 0, "               ", FONT_NORMAL);
+  oledWriteString(0, 0, "1500.5 Hz", FONT_NORMAL);
+  oledWriteString(0, 0, "1500.8 Hz", FONT_NORMAL);
+  oledWriteString(0, 0, "1501.0 Hz", FONT_NORMAL);
+  oledWriteString(0, 0, "1502.4 Hz", FONT_NORMAL);
+  oledWriteString(0, 0, "1621.9 Hz", FONT_NORMAL);
+  oledWriteString(0, 0, "END!     ", FONT_NORMAL);
+
+  for(int i=0; i < 100; i++){
+    char buf[20];
+    sprintf_(buf, "i: %d", i);
+    oledWriteString(0, 0, buf, FONT_NORMAL);
+  }
+  while (1) {
+  };
+  oledShutdown();
+  return 0;
 } /* main() */
